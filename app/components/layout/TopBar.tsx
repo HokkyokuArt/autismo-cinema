@@ -19,7 +19,7 @@ export function TopBar({ user, listName, onLogout, onOpenLists, onOpenSettings, 
           type="button"
           onClick={onOpenLists}
           aria-label="Abrir minhas listas"
-          className="rounded-full p-2 text-mist-300 hover:bg-ink-700 hover:text-mist-50"
+          className="shrink-0 rounded-full p-2 text-mist-300 hover:bg-ink-700 hover:text-mist-50"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
             <path
@@ -32,14 +32,23 @@ export function TopBar({ user, listName, onLogout, onOpenLists, onOpenSettings, 
           </svg>
         </button>
 
-        <Logo size="sm" />
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-col justify-center">
+            <Logo size="sm" />
+            {/* Mobile: nome da lista embaixo do título, pra não espremer o logo na mesma linha. */}
+            {listName && <span className="truncate text-xs text-mist-400 sm:hidden">{listName}</span>}
+          </div>
 
-        {listName && (
-          <span className="hidden min-w-0 items-center gap-1.5 truncate text-sm text-mist-400 sm:flex">
-            <span aria-hidden="true">/</span>
-            <span className="truncate">{listName}</span>
-          </span>
-        )}
+          {/* Desktop: volta a ficar do lado do título, como sempre foi ("título / lista"). */}
+          {listName && (
+            <span className="hidden min-w-0 items-center gap-1.5 truncate text-sm text-mist-400 sm:flex">
+              <span aria-hidden="true" className="shrink-0">
+                /
+              </span>
+              <span className="truncate">{listName}</span>
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

@@ -247,8 +247,8 @@ export function RouletteDialog({ open, onClose, movies, initialPoolIds }: Roulet
 
         {step === "result" && winnerMovie && (
           <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
-            <div className="min-h-0 flex-1">
-              <MovieDetails info={winnerMovie.info} className="h-full" />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <MovieDetails info={winnerMovie.info} />
             </div>
             <div className="flex gap-3 border-t border-ink-700 pt-4">
               <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>

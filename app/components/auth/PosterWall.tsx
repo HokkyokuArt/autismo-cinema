@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { movieProvider, type PosterWallItem } from "~/api/movieProvider";
 
-const LANE_COUNT = 7;
+const DEFAULT_LANE_COUNT = 14;
 /** Precisa de pôster suficiente pra não ficar repetindo o mesmo pouquinho o tempo todo. */
 const MIN_TOTAL_POSTERS = 8;
 /**
@@ -36,6 +36,8 @@ function shuffle<T>(items: T[]): T[] {
 interface PosterWallProps {
   /** Chamado uma vez, quando os pôsteres já buscados terminaram de pré-carregar (ou estourou o timeout). */
   onReady?: () => void;
+  /** Quantidade de raias verticais — no mobile a tela é estreita, então cabe bem menos que no desktop. */
+  laneCount?: number;
 }
 
 /**
@@ -51,7 +53,7 @@ interface PosterWallProps {
  * de verdade (pré-carregada via `Image()`) — sem isso, apareciam retângulos
  * em branco no meio do fluxo até a imagem chegar da rede.
  */
-export function PosterWall({ onReady }: PosterWallProps) {
+export function PosterWall({ onReady, laneCount = DEFAULT_LANE_COUNT }: PosterWallProps) {
   const [posters, setPosters] = useState<PosterWallItem[]>([]);
   const [isFetchDone, setIsFetchDone] = useState(false);
   const [loadedPosters, setLoadedPosters] = useState<PosterWallItem[]>([]);
@@ -135,12 +137,12 @@ export function PosterWall({ onReady }: PosterWallProps) {
     // (mais abaixo) a distância exata entre o primeiro pôster e o seu gêmeo na cópia,
     // e usar essa distância em pixels como a volta completa do loop — sem ela, não
     // haveria um "gêmeo" pra alinhar o pixel de chegada com o de partida.
-    return Array.from({ length: LANE_COUNT }, () => {
+    return Array.from({ length: laneCount }, () => {
       const shuffled = shuffle(loadedPosters);
       const group = Array.from({ length: POSTERS_PER_LANE }, (_, index) => shuffled[index % shuffled.length]);
       return [...group, ...group];
     });
-  }, [loadedPosters]);
+  }, [loadedPosters, laneCount]);
 
   const laneContainerRefs = useRef<Array<HTMLDivElement | null>>([]);
   // Distância exata (em pixels) que cada raia precisa percorrer pra que o pôster do

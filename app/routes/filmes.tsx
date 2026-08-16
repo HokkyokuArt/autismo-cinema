@@ -522,7 +522,7 @@ export default function FilmesPage() {
                 <span className="text-sm text-mist-300">
                   {selectedMovieIds.size} selecionado{selectedMovieIds.size === 1 ? "" : "s"}
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                   <Button
                     className="px-3 py-1.5"
                     disabled={selectedMovieIds.size === 0}

@@ -11,17 +11,24 @@ interface SpeedDialProps {
 }
 
 const HOVER_CLOSE_DELAY_MS = 200;
+/** Quanto tempo segurando o botão principal conta como "press and hold" em touch. */
+const LONG_PRESS_MS = 450;
 
 /**
  * Botão flutuante (canto inferior direito) que expande um painel com ações.
  * Em telas com hover (desktop/mouse): passar o mouse abre o painel; clicar no
- * botão principal dispara `onMainAction` direto. Em touch (sem hover): tocar
- * no botão principal só abre/fecha o painel — a ação principal também fica
- * disponível como a primeira opção da lista.
+ * botão principal dispara `onMainAction` direto. Em touch (sem hover): um
+ * toque rápido no botão principal dispara `onMainAction` direto (igual ao
+ * hover) — segurar por `LONG_PRESS_MS` é que abre o painel com as outras
+ * opções, já que não existe hover pra revelar isso de outro jeito.
  */
 export function SpeedDial({ open, onOpenChange, onMainAction, mainIcon, mainLabel, children }: SpeedDialProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Marca que o "segurar" já completou e abriu o painel — o click nativo que dispara logo
+  // depois de soltar o dedo não deve também acionar a ação principal nesse caso.
+  const longPressTriggeredRef = useRef(false);
   const [isHoverCapable, setIsHoverCapable] = useState(false);
 
   useEffect(() => {
@@ -55,6 +62,7 @@ export function SpeedDial({ open, onOpenChange, onMainAction, mainIcon, mainLabe
   }, [open, onOpenChange]);
 
   useEffect(() => () => clearTimeout(closeTimeoutRef.current), []);
+  useEffect(() => () => clearTimeout(longPressTimeoutRef.current), []);
 
   function handleMouseEnter() {
     if (!isHoverCapable) return;
@@ -67,13 +75,35 @@ export function SpeedDial({ open, onOpenChange, onMainAction, mainIcon, mainLabe
     closeTimeoutRef.current = setTimeout(() => onOpenChange(false), HOVER_CLOSE_DELAY_MS);
   }
 
+  function handleMainPointerDown() {
+    if (isHoverCapable) return;
+    longPressTriggeredRef.current = false;
+    longPressTimeoutRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      onOpenChange(true);
+    }, LONG_PRESS_MS);
+  }
+
+  function handleMainPointerUp() {
+    if (isHoverCapable) return;
+    clearTimeout(longPressTimeoutRef.current);
+  }
+
   function handleMainClick() {
     if (isHoverCapable) {
       onOpenChange(false);
       onMainAction();
-    } else {
-      onOpenChange(!open);
+      return;
     }
+    // Já abriu o painel segurando — o click nativo que acompanha o soltar do dedo não deve
+    // também disparar a ação principal por cima.
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
+      return;
+    }
+    // Toque rápido (sem segurar) — vai direto pra ação principal, como um botão comum.
+    onOpenChange(false);
+    onMainAction();
   }
 
   return (
@@ -90,9 +120,14 @@ export function SpeedDial({ open, onOpenChange, onMainAction, mainIcon, mainLabe
       <button
         type="button"
         onClick={handleMainClick}
+        onPointerDown={handleMainPointerDown}
+        onPointerUp={handleMainPointerUp}
+        onPointerLeave={handleMainPointerUp}
+        onPointerCancel={handleMainPointerUp}
+        onContextMenu={(event) => event.preventDefault()}
         aria-label={mainLabel}
         title={mainLabel}
-        className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-brand-600 text-white shadow-2xl transition-transform hover:scale-105"
+        className="flex h-14 w-14 touch-none items-center justify-center overflow-hidden rounded-full bg-brand-600 text-white shadow-2xl transition-transform select-none hover:scale-105"
       >
         <span className="h-9 w-9">{mainIcon}</span>
       </button>

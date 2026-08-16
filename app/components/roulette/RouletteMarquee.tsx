@@ -27,7 +27,7 @@ export function RouletteMarquee({ title }: RouletteMarqueeProps) {
   }, [title]);
 
   return (
-    <div className="flex w-full flex-col items-center gap-2 sm:w-52 sm:shrink-0">
+    <div className="flex w-64 shrink-0 flex-col items-center gap-2 sm:w-52">
       <span className="text-xs font-medium tracking-widest text-mist-400 uppercase">Selecionado</span>
       <div className="relative flex h-14 w-full items-center justify-center overflow-hidden rounded-lg border border-ink-600 bg-ink-900/80 px-3 shadow-[inset_0_2px_6px_rgba(0,0,0,0.5)]">
         <p ref={textRef} className="text-marquee font-display truncate text-center text-lg">

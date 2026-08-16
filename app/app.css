@@ -79,6 +79,93 @@ body {
   }
 }
 
+/* Tela de login (desktop): ao clicar em "Entrar", o painel do formulário não desliza direto pro
+   lugar — ele bate na janela do mural em ondas, cada uma avançando um pouco mais, com uma pequena
+   folga de "mola" entre as batidas (some e volta a encostar), até um empurrão final que passa um
+   pouco do tamanho definitivo e recua, fechando exatamente em 66/34. loginPanelLeft e
+   loginPanelRight são o espelho um do outro (mesmos instantes) — a pequena folga entre eles nos
+   instantes de recuo é o "espaço" que abre a cada batida. */
+@keyframes loginPanelLeft {
+  0% {
+    width: 100%;
+  }
+  10% {
+    width: 85%;
+  }
+  18% {
+    width: 86%;
+  }
+  32% {
+    width: 73%;
+  }
+  40% {
+    width: 75%;
+  }
+  56% {
+    width: 66%;
+  }
+  64% {
+    width: 68%;
+  }
+  84% {
+    width: 56%;
+  }
+  100% {
+    width: 66%;
+  }
+}
+
+@keyframes loginPanelRight {
+  0% {
+    width: 0%;
+  }
+  10% {
+    width: 15%;
+  }
+  18% {
+    width: 11%;
+  }
+  32% {
+    width: 27%;
+  }
+  40% {
+    width: 22%;
+  }
+  56% {
+    width: 34%;
+  }
+  64% {
+    width: 29%;
+  }
+  84% {
+    width: 44%;
+  }
+  100% {
+    width: 34%;
+  }
+}
+
+/* Véu escuro que reforça a impressão de impacto durante a "briga" dos painéis — sobe rápido logo
+   no início, segue discreto durante as batidas e escurece mais um pouco no empurrão final, depois
+   dissolve por completo quando a tela termina dividida. */
+@keyframes loginImpactFlash {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  84% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 /* Mural de pôsteres da tela de login — cada raia rola por `--lane-shift` (setado via JS,
    em pixels, medido de verdade no DOM — ver PosterWall.tsx) em vez de uma fração fixa tipo
    -50%: como o conteúdo é duplicado, esse valor é exatamente a distância entre o topo do
