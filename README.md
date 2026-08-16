@@ -9,7 +9,7 @@ avaliações, preferências) fica salvo no `localStorage` do navegador. Os dados
 dos filmes (pôster, sinopse, elenco, nota) vêm da API do TMDB (com OMDB como
 complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
 
-![Grade de filmes](docs/screenshots/grade-filmes.jpg)
+![Grade de filmes](.github/screenshots/grade-filmes.jpg)
 
 ## Principais funcionalidades
 
@@ -36,22 +36,22 @@ complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
 
 <table>
 <tr>
-<td><img src="docs/screenshots/login-inicial.jpg" alt="Tela inicial de login" /></td>
-<td><img src="docs/screenshots/login-formulario.jpg" alt="Formulário de login" /></td>
+<td><img src=".github/screenshots/login-inicial.jpg" alt="Tela inicial de login" /></td>
+<td><img src=".github/screenshots/login-formulario.jpg" alt="Formulário de login" /></td>
 </tr>
 </table>
 
 ### Detalhes de um filme
 
-![Detalhes do filme](docs/screenshots/detalhes-filme.jpg)
+![Detalhes do filme](.github/screenshots/detalhes-filme.jpg)
 
 ### Roleta
 
 <table>
 <tr>
-<td><img src="docs/screenshots/roleta-setup.jpg" alt="Configuração da roleta" /></td>
-<td><img src="docs/screenshots/roleta-girando.jpg" alt="Roleta girando" /></td>
-<td><img src="docs/screenshots/roleta-resultado.jpg" alt="Resultado da roleta" /></td>
+<td><img src=".github/screenshots/roleta-setup.jpg" alt="Configuração da roleta" /></td>
+<td><img src=".github/screenshots/roleta-girando.jpg" alt="Roleta girando" /></td>
+<td><img src=".github/screenshots/roleta-resultado.jpg" alt="Resultado da roleta" /></td>
 </tr>
 </table>
 
@@ -59,9 +59,9 @@ complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
 
 <table>
 <tr>
-<td><img src="docs/screenshots/listas-drawer.jpg" alt="Painel de listas" /></td>
-<td><img src="docs/screenshots/configuracoes-layout.jpg" alt="Configurações — layout" /></td>
-<td><img src="docs/screenshots/configuracoes-backup.jpg" alt="Configurações — backup" /></td>
+<td><img src=".github/screenshots/listas-drawer.jpg" alt="Painel de listas" /></td>
+<td><img src=".github/screenshots/configuracoes-layout.jpg" alt="Configurações — layout" /></td>
+<td><img src=".github/screenshots/configuracoes-backup.jpg" alt="Configurações — backup" /></td>
 </tr>
 </table>
 
