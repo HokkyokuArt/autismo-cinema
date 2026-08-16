@@ -1,37 +1,43 @@
-# Autismo Cinema
+# <img src="public/icon.png" width="36" align="absmiddle" alt="" /> Autismo Cinema
 
 Catálogo de filmes do grupo: várias **listas** (uma pra cada contexto — com os amigos, com
 a família, sozinho etc.), cada uma com seus próprios filmes e quem já assistiu o quê, e
-uma **roleta** pra ajudar a decidir o que ver quando ninguém consegue escolher.
+uma **roleta** 🎡 pra ajudar a decidir o que ver quando ninguém consegue escolher (ou seja,
+sempre).
 
-Não tem servidor/banco de dados — é um app 100% client-side: tudo (login, listas, filmes,
-avaliações, preferências) fica salvo no `localStorage` do navegador. Os dados de catálogo
-dos filmes (pôster, sinopse, elenco, nota) vêm da API do TMDB (com OMDB como
-complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
+Não existe cura pra bagunça de um grupo decidindo o que assistir às 23h de domingo — mas
+dá pra organizar um pouco. Não tem servidor/banco de dados — é um app 100% client-side:
+tudo (login, listas, filmes, avaliações, preferências) fica salvo no `localStorage` do
+navegador. Os dados de catálogo dos filmes (pôster, sinopse, elenco, nota) vêm da API do
+TMDB (com OMDB como complemento/alternativa), buscados uma vez ao cadastrar/editar um
+filme.
 
 ![Grade de filmes](.github/screenshots/grade-filmes.jpg)
 
 ## Principais funcionalidades
 
-- **Login/registro** próprio (sem serviço externo) — senha com hash+salt (PBKDF2), sessão
+- 🔐 **Login/registro** próprio (sem serviço externo) — senha com hash+salt (PBKDF2), sessão
   com expiração deslizante.
-- **Múltiplas listas** de filmes, cada uma podendo ser reordenada (drag and drop), renomeada
-  e excluída.
-- **Cadastro de filme** via busca no TMDB (poster, sinopse, elenco, direção, nota IMDb,
-  onde assistir) ou manual, com detecção de duplicados.
-- **Marcar como assistido** (e desfazer, sem apagar histórico).
-- **Roleta**: sorteia um filme entre os ainda não assistidos (com filtros avançados e
-  inclusão manual de filmes específicos), com animação de giro.
-- **Seleção em massa**: marcar vários filmes como assistido/não assistido, copiar pra
+- 📋 **Múltiplas listas** de filmes, cada uma podendo ser reordenada (drag and drop), renomeada
+  e excluída — uma pra cada "panelinha" do grupo.
+- 🔎 **Cadastro de filme** via busca no TMDB (poster, sinopse, elenco, direção, nota IMDb,
+  onde assistir) ou manual, com detecção de duplicados (porque alguém sempre tenta
+  cadastrar o mesmo filme duas vezes).
+- ✅ **Marcar como assistido** (e desfazer, sem apagar histórico — ninguém precisa saber
+  que você reassistiu pela quinta vez).
+- 🎡 **Roleta**: sorteia um filme entre os ainda não assistidos (com filtros avançados e
+  inclusão manual de filmes específicos), com animação de giro — resolve a maior briga da
+  noite em segundos.
+- 🖱️ **Seleção em massa**: marcar vários filmes como assistido/não assistido, copiar pra
   outra lista ou excluir de uma vez.
-- **Filtros e ordenação** avançados (gênero, ano, nota, elenco, plataforma etc.).
-- **Backup**: exportar (arquivo ou área de transferência, com opção de escolher quais
+- 🎚️ **Filtros e ordenação** avançados (gênero, ano, nota, elenco, plataforma etc.).
+- 💾 **Backup**: exportar (arquivo ou área de transferência, com opção de escolher quais
   listas) e importar (arquivo ou colado, com validação e opção de mesclar ou sobrescrever)
   todo o acervo — filmes, listas, pessoas, avaliações e preferências. Nunca inclui
   login/senha.
-- **Preferências**: tamanho da grade de pôsteres e nível de animação (desativado, básico,
+- ⚙️ **Preferências**: tamanho da grade de pôsteres e nível de animação (desativado, básico,
   completo — o completo tem efeitos de hover/3D que só fazem sentido com mouse).
-- Tela de login com um mural de pôsteres animado (desktop e mobile) e uma pequena
+- ✨ Tela de login com um mural de pôsteres animado (desktop e mobile) e uma pequena
   animação de entrada.
 
 <table>
@@ -65,7 +71,21 @@ complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
 </tr>
 </table>
 
-## Stack técnica
+### 📱 No celular
+
+Porque o grupo decide o que assistir de qualquer lugar — inclusive no sofá, sem vontade
+nenhuma de abrir o notebook:
+
+<table>
+<tr>
+<td><img src=".github/screenshots/login-mobile.png" width="200" alt="Login no mobile" /></td>
+<td><img src=".github/screenshots/grade-mobile.png" width="200" alt="Grade de filmes no mobile" /></td>
+<td><img src=".github/screenshots/detalhes-filme-mobile.png" width="200" alt="Detalhes do filme no mobile" /></td>
+<td><img src=".github/screenshots/roleta-mobile.png" width="200" alt="Roleta no mobile" /></td>
+</tr>
+</table>
+
+## 🛠️ Stack técnica
 
 - [React Router](https://reactrouter.com/) v8 em modo framework (SSR + roteamento)
 - React 19 + TypeScript
@@ -75,7 +95,7 @@ complemento/alternativa), buscados uma vez ao cadastrar/editar um filme.
 - Sem banco de dados — persistência é só `localStorage` (ver `app/storage/`)
 - TMDB API (principal) e OMDB API (complemento) pra dados de catálogo dos filmes
 
-## Como rodar o projeto
+## 🚀 Como rodar o projeto
 
 ### Pré-requisitos
 
@@ -176,10 +196,11 @@ Lembre de configurar as variáveis de ambiente (`VITE_TMDB_ACCESS_TOKEN`,
 `VITE_TMDB_API_KEY`, `VITE_OMDB_API_KEY`) — elas são lidas em **build time** (prefixo
 `VITE_`), então precisam estar disponíveis quando `npm run build` roda, não só em runtime.
 
-## Planejado
+## 🚧 Planejado
 
 A especificação original (`docs/PLANO.md`) previa mais coisa do que o que está construído
-até agora. O que falta:
+até agora — como toda promessa de fim de semana, algumas coisas ficaram pro próximo
+sprint (que também não tem data). O que falta:
 
 - **Pessoas do grupo e avaliação individual.** Os modelos (`Person`, `Rating`) e os
   repositórios já existem e já entram no backup, mas não há nenhuma tela pra isso ainda:
@@ -194,4 +215,4 @@ até agora. O que falta:
 
 Como não há banco de dados, todo o acervo do grupo vive no `localStorage` do navegador de
 cada pessoa — use a aba **Backup** nas Configurações pra exportar/importar e manter todo
-mundo sincronizado.
+mundo sincronizado. Combinado é combinado: faça backup antes de sobrescrever tudo. 🍿
