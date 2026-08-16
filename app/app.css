@@ -3,13 +3,201 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-display: "Bebas Neue", "Inter", ui-sans-serif, sans-serif;
+  /* Só pro nome "Autismo Cinema" (marca) — estilo letreiro de marquise de cinema,
+     propositalmente diferente do font-display usado nos títulos de filme/headings. */
+  --font-brand: "Bungee", "Bebas Neue", "Inter", ui-sans-serif, sans-serif;
+
+  /* Identidade visual: cinema em dark mode, roxo escuro como cor principal. */
+  --color-ink-950: #07050d;
+  --color-ink-900: #0e0817;
+  --color-ink-800: #170f24;
+  --color-ink-700: #221733;
+  --color-ink-600: #2e2044;
+  --color-ink-500: #40305c;
+
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6d28d9;
+
+  --color-marquee: #f5c451;
+
+  --color-mist-50: #f5f3f8;
+  --color-mist-200: #d9d2e6;
+  --color-mist-400: #a89db8;
 }
 
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
+  background-color: var(--color-ink-950);
+  color: var(--color-mist-50);
+  color-scheme: dark;
+}
 
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
+body {
+  min-height: 100dvh;
+  /* Cards em animações "full" saltam da tela (scale/rotate) ao passar o mouse — perto
+     da borda direita isso passa do viewport e, sem isso, cria scroll horizontal na página. */
+  overflow-x: hidden;
+}
+
+/* Scrollbars no tom do tema (roxo escuro) em vez do cinza padrão do navegador. */
+* {
+  scrollbar-color: var(--color-ink-500) var(--color-ink-900);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-ink-900);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-ink-500);
+  border-radius: 999px;
+  border: 2px solid var(--color-ink-900);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-brand-500);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mural de pôsteres da tela de login — cada raia rola por `--lane-shift` (setado via JS,
+   em pixels, medido de verdade no DOM — ver PosterWall.tsx) em vez de uma fração fixa tipo
+   -50%: como o conteúdo é duplicado, esse valor é exatamente a distância entre o topo do
+   primeiro pôster e o topo do pôster igual a ele na cópia, então ao completar o ciclo os
+   dois estão pixel a pixel no mesmo lugar e o loop não dá salto nenhum. Raias vizinhas
+   usam a versão "down" pra ir em sentidos opostos. O ciclo começa e termina na metade do
+   grupo (-0.5 a -1.5 * shift) em vez das bordas (0 a -1 * shift), pra o "corte" do loop
+   nunca cair bem no início/fim visível de um pôster. */
+@keyframes posterWallUp {
+  from {
+    transform: translateY(calc(var(--lane-shift, 3200px) * -0.5));
+  }
+  to {
+    transform: translateY(calc(var(--lane-shift, 3200px) * -1.5));
+  }
+}
+
+@keyframes posterWallDown {
+  from {
+    transform: translateY(calc(var(--lane-shift, 3200px) * -1.5));
+  }
+  to {
+    transform: translateY(calc(var(--lane-shift, 3200px) * -0.5));
+  }
+}
+
+/* Loader "camerazinha" da tela de login — corpo balança de leve, lente "respira" como
+   uma íris abrindo/fechando, e a lucezinha de gravação pisca. */
+@keyframes cameraBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes cameraLensPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.72);
+  }
+}
+
+@keyframes cameraRecBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* Fogos do easter egg (Konami code) — cada partícula voa de --dx/--dy (setados inline). */
+.firework-particle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  animation: firework-particle 1100ms ease-out forwards;
+}
+
+@keyframes firework-particle {
+  from {
+    transform: translate(0, 0) scale(1.4);
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.15);
+    opacity: 0;
+  }
+}
+
+.firework-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border-radius: 999px;
+  animation: firework-flash 450ms ease-out forwards;
+}
+
+@keyframes firework-flash {
+  from {
+    transform: scale(0.3);
+    opacity: 1;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Nível de animação nas configurações (independente do prefers-reduced-motion do SO). */
+html[data-animation-level="off"] *,
+html[data-animation-level="off"] *::before,
+html[data-animation-level="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
 }
