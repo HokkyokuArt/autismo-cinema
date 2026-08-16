@@ -1,10 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AppSettings } from "~/models/settings";
+import type { MovieList } from "~/models/movieList";
 import { Dialog } from "~/components/common/Dialog";
 import { Button } from "~/components/common/Button";
 import { TextareaField } from "~/components/common/TextareaField";
 import { AnimationLevelToggle } from "~/components/common/AnimationLevelToggle";
 import { GridSizeControl } from "~/components/movies/GridSizeControl";
+import { Logo } from "~/components/common/Logo";
 import { useToast } from "~/contexts/ToastContext";
 import {
   applyBackup,
@@ -13,6 +15,7 @@ import {
   validateBackup,
   type BackupEnvelope,
   type BackupSummary,
+  type ImportMode,
 } from "~/storage/backup";
 
 interface SettingsDialogProps {
@@ -20,31 +23,63 @@ interface SettingsDialogProps {
   onClose: () => void;
   settings: AppSettings;
   onUpdateSettings: (partial: Partial<AppSettings>) => void;
+  lists: MovieList[];
 }
 
-type SettingsTab = "layout" | "backup";
+type SettingsTab = "layout" | "backup" | "sobre";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "layout", label: "Layout" },
   { value: "backup", label: "Backup" },
+  { value: "sobre", label: "Sobre" },
 ];
 
-export function SettingsDialog({ open, onClose, settings, onUpdateSettings }: SettingsDialogProps) {
+export function SettingsDialog({ open, onClose, settings, onUpdateSettings, lists }: SettingsDialogProps) {
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("layout");
   const [pasteText, setPasteText] = useState("");
   const [importError, setImportError] = useState<string | null>(null);
+  const [importMode, setImportMode] = useState<ImportMode>("merge");
   const [pendingImport, setPendingImport] = useState<{ backup: BackupEnvelope; summary: BackupSummary } | null>(null);
+  const [selectedListIds, setSelectedListIds] = useState<Set<string>>(() => new Set(lists.map((list) => list.id)));
+
+  // Toda vez que o diálogo abre, recomeça com todas as listas marcadas — não deixa uma
+  // seleção parcial de uma sessão anterior escondida sem o usuário perceber.
+  useEffect(() => {
+    if (open) setSelectedListIds(new Set(lists.map((list) => list.id)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const allSelected = lists.length > 0 && selectedListIds.size === lists.length;
+
+  function toggleList(listId: string) {
+    setSelectedListIds((current) => {
+      const next = new Set(current);
+      if (next.has(listId)) next.delete(listId);
+      else next.add(listId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedListIds(allSelected ? new Set() : new Set(lists.map((list) => list.id)));
+  }
+
+  function exportOptions() {
+    // Só filtra de verdade quando faltar pelo menos uma lista marcada — com tudo
+    // selecionado, exporta do jeito que já era (sem passar listIds pra função).
+    return allSelected ? undefined : { listIds: Array.from(selectedListIds) };
+  }
 
   function handleExportFile() {
-    downloadBackupFile();
+    downloadBackupFile(exportOptions());
     showToast("Backup exportado para arquivo.");
   }
 
   async function handleExportClipboard() {
     try {
-      await copyBackupToClipboard();
+      await copyBackupToClipboard(exportOptions());
       showToast("Backup copiado pra área de transferência (Ctrl+V pra colar em qualquer lugar).");
     } catch {
       showToast(
@@ -80,7 +115,7 @@ export function SettingsDialog({ open, onClose, settings, onUpdateSettings }: Se
 
   function handleConfirmImport() {
     if (!pendingImport) return;
-    applyBackup(pendingImport.backup);
+    applyBackup(pendingImport.backup, importMode);
     setPendingImport(null);
     setPasteText("");
     showToast("Backup importado! Recarregando…");
@@ -141,9 +176,39 @@ export function SettingsDialog({ open, onClose, settings, onUpdateSettings }: Se
               <div className="rounded-lg border border-amber-600/50 bg-ink-800 p-3">
                 <p className="mb-3 text-sm text-mist-100">
                   Esse backup tem {pendingImport.summary.movies} filme(s), {pendingImport.summary.lists} lista(s),{" "}
-                  {pendingImport.summary.people} pessoa(s) e {pendingImport.summary.ratings} avaliação(ões). Importar
-                  vai <strong>substituir todos os seus dados atuais</strong> — essa ação não pode ser desfeita.
+                  {pendingImport.summary.people} pessoa(s) e {pendingImport.summary.ratings} avaliação(ões).
                 </p>
+
+                <p className="mb-1.5 text-xs font-medium text-mist-300">Ao importar</p>
+                <div role="radiogroup" aria-label="Modo de importação" className="mb-3 flex flex-col gap-2">
+                  <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-ink-700 p-2.5 has-[:checked]:border-brand-500 has-[:checked]:bg-ink-900">
+                    <input
+                      type="radio"
+                      name="import-mode"
+                      className="mt-0.5"
+                      checked={importMode === "merge"}
+                      onChange={() => setImportMode("merge")}
+                    />
+                    <span className="text-sm text-mist-100">
+                      <strong>Mesclar</strong> — adiciona o que só existe no backup e atualiza o que já existe aqui;
+                      não apaga o resto do que você já tem.
+                    </span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-ink-700 p-2.5 has-[:checked]:border-brand-500 has-[:checked]:bg-ink-900">
+                    <input
+                      type="radio"
+                      name="import-mode"
+                      className="mt-0.5"
+                      checked={importMode === "overwrite"}
+                      onChange={() => setImportMode("overwrite")}
+                    />
+                    <span className="text-sm text-mist-100">
+                      <strong>Sobrescrever tudo</strong> — substitui todos os seus dados atuais pelos do backup. Essa
+                      ação não pode ser desfeita.
+                    </span>
+                  </label>
+                </div>
+
                 <div className="flex gap-2">
                   <Button variant="ghost" className="flex-1" onClick={() => setPendingImport(null)}>
                     Cancelar
@@ -156,11 +221,38 @@ export function SettingsDialog({ open, onClose, settings, onUpdateSettings }: Se
             ) : (
               <>
                 <p className="mb-1.5 text-xs font-medium text-mist-300">Exportar</p>
+
+                {lists.length > 0 && (
+                  <div className="mb-3 rounded-lg border border-ink-700">
+                    <label className="flex cursor-pointer items-center gap-2.5 border-b border-ink-700 px-3 py-2">
+                      <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} />
+                      <span className="text-xs font-medium text-mist-200">
+                        {allSelected ? "Desmarcar todas" : "Selecionar todas"}
+                      </span>
+                    </label>
+                    <div className="max-h-40 overflow-y-auto">
+                      {lists.map((list) => (
+                        <label
+                          key={list.id}
+                          className="flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm text-mist-100 hover:bg-ink-800"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedListIds.has(list.id)}
+                            onChange={() => toggleList(list.id)}
+                          />
+                          <span className="truncate">{list.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="mb-4 flex flex-wrap gap-2">
-                  <Button variant="ghost" onClick={handleExportFile}>
+                  <Button variant="ghost" disabled={selectedListIds.size === 0} onClick={handleExportFile}>
                     Exportar para arquivo
                   </Button>
-                  <Button variant="ghost" onClick={handleExportClipboard}>
+                  <Button variant="ghost" disabled={selectedListIds.size === 0} onClick={handleExportClipboard}>
                     Copiar (Ctrl+C)
                   </Button>
                 </div>
@@ -201,6 +293,26 @@ export function SettingsDialog({ open, onClose, settings, onUpdateSettings }: Se
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === "sobre" && (
+          <div className="flex flex-col gap-4">
+            <Logo size="sm" />
+            <div>
+              <p className="mb-1 text-sm font-medium text-mist-100">O que é isso aqui</p>
+              <p className="text-sm text-mist-300">
+                Autismo Cinema é o catálogo de filmes do grupo: cada lista guarda os filmes de um contexto diferente
+                (com os amigos, com a família etc.), com quem já assistiu o quê, e uma roleta pra ajudar a decidir o
+                que ver quando ninguém consegue escolher.
+              </p>
+            </div>
+            <div>
+              <p className="mb-1 text-sm font-medium text-mist-100">Sobre</p>
+              <p className="text-sm text-mist-300">
+                Feito e mantido por Artico, pra organizar e tornar mais divertida a sessão de cinema do grupo.
+              </p>
+            </div>
           </div>
         )}
       </div>

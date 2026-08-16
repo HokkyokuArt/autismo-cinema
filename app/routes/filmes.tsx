@@ -764,6 +764,7 @@ export default function FilmesPage() {
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
         onUpdateSettings={updateSettings}
+        lists={lists}
       />
 
       <EditProfileDialog

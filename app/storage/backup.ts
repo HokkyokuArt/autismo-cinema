@@ -43,29 +43,46 @@ export type BackupValidationResult =
   | { ok: true; backup: BackupEnvelope; summary: BackupSummary }
   | { ok: false; error: string };
 
+export interface BuildBackupOptions {
+  /** Se informado, exporta só essas listas (e os filmes/avaliações que pertencem a elas). */
+  listIds?: string[];
+}
+
 /**
  * Reúne só os dados do "acervo" do grupo (filmes, listas, pessoas, avaliações e
  * preferências). Propositalmente NÃO inclui `users` (senha com hash + salt — dado de
  * conta, não faz sentido importar em outro dispositivo) nem `session` (efêmera, expira
  * sozinha e é específica de cada login).
  */
-export function buildBackup(): BackupEnvelope {
+export function buildBackup(options: BuildBackupOptions = {}): BackupEnvelope {
+  const allLists = listsRepository.getAll();
+  const allMovies = moviesRepository.getAll();
+  const allRatings = ratingsRepository.getAll();
+
+  const lists = options.listIds ? allLists.filter((list) => options.listIds!.includes(list.id)) : allLists;
+  const listIds = new Set(lists.map((list) => list.id));
+  const movies = options.listIds ? allMovies.filter((movie) => listIds.has(movie.listId)) : allMovies;
+  const movieIds = new Set(movies.map((movie) => movie.id));
+  // Pessoas não são filtradas — são só nomes reutilizados nas avaliações, não fazem
+  // sentido "pertencer" a uma lista, então continuam todas indo no backup.
+  const ratings = options.listIds ? allRatings.filter((rating) => movieIds.has(rating.movieId)) : allRatings;
+
   return {
     appId: BACKUP_APP_ID,
     version: BACKUP_FORMAT_VERSION,
     exportedAt: new Date().toISOString(),
     data: {
-      movies: moviesRepository.getAll(),
-      lists: listsRepository.getAll(),
+      movies,
+      lists,
       people: peopleRepository.getAll(),
-      ratings: ratingsRepository.getAll(),
+      ratings,
       settings: settingsRepository.get(),
     },
   };
 }
 
-export function serializeBackup(): string {
-  return JSON.stringify(buildBackup(), null, 2);
+export function serializeBackup(options?: BuildBackupOptions): string {
+  return JSON.stringify(buildBackup(options), null, 2);
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -165,17 +182,38 @@ export function validateBackup(rawText: string): BackupValidationResult {
   };
 }
 
-/** Substitui TODO o acervo local pelo conteúdo do backup — ação destrutiva e irreversível. */
-export function applyBackup(backup: BackupEnvelope): void {
-  listsRepository.replaceAll(backup.data.lists);
-  moviesRepository.replaceAll(backup.data.movies);
-  peopleRepository.replaceAll(backup.data.people);
-  ratingsRepository.replaceAll(backup.data.ratings);
+export type ImportMode = "overwrite" | "merge";
+
+/** Uma lista final por id — o item do backup (`incoming`) vence quando o id já existia. */
+function mergeById<T extends { id: string }>(existing: T[], incoming: T[]): T[] {
+  const byId = new Map(existing.map((item) => [item.id, item]));
+  for (const item of incoming) byId.set(item.id, item);
+  return Array.from(byId.values());
+}
+
+/**
+ * "overwrite" substitui TODO o acervo local pelo conteúdo do backup — destrutivo e
+ * irreversível. "merge" preserva o que já existe: ids que só estão no backup são
+ * adicionados, ids que já existem localmente são atualizados com a versão do backup,
+ * e o que só existe localmente (fora do backup) não é tocado.
+ */
+export function applyBackup(backup: BackupEnvelope, mode: ImportMode = "overwrite"): void {
+  if (mode === "overwrite") {
+    listsRepository.replaceAll(backup.data.lists);
+    moviesRepository.replaceAll(backup.data.movies);
+    peopleRepository.replaceAll(backup.data.people);
+    ratingsRepository.replaceAll(backup.data.ratings);
+  } else {
+    listsRepository.replaceAll(mergeById(listsRepository.getAll(), backup.data.lists));
+    moviesRepository.replaceAll(mergeById(moviesRepository.getAll(), backup.data.movies));
+    peopleRepository.replaceAll(mergeById(peopleRepository.getAll(), backup.data.people));
+    ratingsRepository.replaceAll(mergeById(ratingsRepository.getAll(), backup.data.ratings));
+  }
   settingsRepository.update(backup.data.settings);
 }
 
-export function downloadBackupFile(): void {
-  const json = serializeBackup();
+export function downloadBackupFile(options?: BuildBackupOptions): void {
+  const json = serializeBackup(options);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const stamp = new Date().toISOString().slice(0, 10);
@@ -188,6 +226,6 @@ export function downloadBackupFile(): void {
   URL.revokeObjectURL(url);
 }
 
-export async function copyBackupToClipboard(): Promise<void> {
-  await navigator.clipboard.writeText(serializeBackup());
+export async function copyBackupToClipboard(options?: BuildBackupOptions): Promise<void> {
+  await navigator.clipboard.writeText(serializeBackup(options));
 }
