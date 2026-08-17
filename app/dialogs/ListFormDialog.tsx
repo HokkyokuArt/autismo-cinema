@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { MovieList } from "~/models/movieList";
 import { Dialog } from "~/components/common/Dialog";
 import { Button } from "~/components/common/Button";
 import { FormField } from "~/components/common/FormField";
 import { TextareaField } from "~/components/common/TextareaField";
+import { TutorialHintBanner } from "~/components/tutorial/TutorialHintBanner";
 
 interface ListFormDialogProps {
   open: boolean;
@@ -11,9 +12,11 @@ interface ListFormDialogProps {
   onSave: (list: MovieList) => void;
   /** Presente = editando esta lista; ausente = criando uma nova. */
   list?: MovieList;
+  /** Aviso do tutorial guiado, exibido dentro do formulário. */
+  tutorialHint?: ReactNode;
 }
 
-export function ListFormDialog({ open, onClose, onSave, list }: ListFormDialogProps) {
+export function ListFormDialog({ open, onClose, onSave, list, tutorialHint }: ListFormDialogProps) {
   const isEditing = list != null;
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -60,6 +63,7 @@ export function ListFormDialog({ open, onClose, onSave, list }: ListFormDialogPr
   return (
     <Dialog open={open} onClose={onClose} title={isEditing ? "Editar lista" : "Nova lista"} isDirty={isDirty}>
       <form onSubmit={handleSave} className="flex flex-col gap-4">
+        {tutorialHint && <TutorialHintBanner>{tutorialHint}</TutorialHintBanner>}
         <FormField
           label="Nome*"
           placeholder="Ex.: Filmes com os amigos"

@@ -8,6 +8,7 @@ import { useLists } from "~/hooks/useLists";
 import { useSettings } from "~/hooks/useSettings";
 import { useMovieFilters } from "~/hooks/useMovieFilters";
 import { useMovieSort } from "~/hooks/useMovieSort";
+import { useTutorialFlow } from "~/hooks/useTutorialFlow";
 import type { Movie, MovieInfo, MovieSource } from "~/models/movie";
 import type { MovieList, MovieListWithStats } from "~/models/movieList";
 import { findDuplicateMovie } from "~/utils/movieDuplicates";
@@ -107,6 +108,45 @@ export default function FilmesPage() {
   const isCoarsePointer = useIsCoarsePointer();
   const effectiveAnimationLevel =
     isCoarsePointer && settings.animationLevel === "full" ? "basic" : settings.animationLevel;
+
+  const tutorial = useTutorialFlow({
+    userId: user?.id,
+    hasLists: lists.length > 0,
+    animationsEnabled: effectiveAnimationLevel !== "off",
+    openListsDrawerForCreateList: () => setIsDrawerOpen(true),
+  });
+
+  // Passos do tutorial que dependem de "abriu"/"fechou" algo (gaveta de listas, speed dial,
+  // roleta) ou de "selecionou o primeiro filme" — comparam com o valor anterior pra só notificar
+  // na transição certa, não a cada render.
+  const wasDrawerOpenRef = useRef(false);
+  useEffect(() => {
+    if (wasDrawerOpenRef.current && !isDrawerOpen) tutorial.notify("drawer-closed");
+    wasDrawerOpenRef.current = isDrawerOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDrawerOpen]);
+
+  const wasSpeedDialOpenRef = useRef(false);
+  useEffect(() => {
+    if (!wasSpeedDialOpenRef.current && isSpeedDialOpen) tutorial.notify("speed-dial-opened");
+    wasSpeedDialOpenRef.current = isSpeedDialOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSpeedDialOpen]);
+
+  const wasRouletteOpenRef = useRef(false);
+  useEffect(() => {
+    if (!wasRouletteOpenRef.current && isRouletteOpen) tutorial.notify("roulette-opened");
+    wasRouletteOpenRef.current = isRouletteOpen;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRouletteOpen]);
+
+  const hadSelectionRef = useRef(false);
+  useEffect(() => {
+    const hasSelection = selectedMovieIds.size > 0;
+    if (!hadSelectionRef.current && hasSelection) tutorial.notify("movie-selected");
+    hadSelectionRef.current = hasSelection;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedMovieIds]);
 
   const currentConflict = conflictQueue[0] ?? null;
 
@@ -245,6 +285,7 @@ export default function FilmesPage() {
       createdAt: now,
       updatedAt: now,
     });
+    tutorial.notify("movie-added", { title: info.title, originalTitle: info.originalTitle });
     return true;
   }
 
@@ -299,6 +340,10 @@ export default function FilmesPage() {
         watched: false,
         createdAt: now,
         updatedAt: now,
+      });
+      tutorial.notify("movie-added", {
+        title: currentConflict.info.title,
+        originalTitle: currentConflict.info.originalTitle,
       });
       showToast(`"${currentConflict.info.title}" adicionado mesmo assim.`);
     }
@@ -465,6 +510,7 @@ export default function FilmesPage() {
       addList(list);
       updateSettings({ activeListId: list.id });
       showToast(`Lista "${list.name}" criada.`);
+      tutorial.notify("list-created");
     }
   }
 
@@ -488,6 +534,7 @@ export default function FilmesPage() {
     <div className="min-h-dvh">
       {effectiveAnimationLevel === "full" && <PosterSpotlight lightsOn={lightsOn} />}
       {showFireworks && <Fireworks onDone={() => setShowFireworks(false)} />}
+      {tutorial.overlay}
 
       <div className="sticky top-0 z-30 border-b border-ink-700 bg-ink-950/75 backdrop-blur-md">
         <TopBar
@@ -605,7 +652,12 @@ export default function FilmesPage() {
                       </div>
                     )}
                   </div>
-                  <Button variant="ghost" className="px-3 py-1.5" onClick={toggleSelectionMode}>
+                  <Button
+                    variant="ghost"
+                    data-tutorial="selection-cancel-button"
+                    className="px-3 py-1.5"
+                    onClick={toggleSelectionMode}
+                  >
                     Cancelar
                   </Button>
                 </div>
@@ -621,7 +673,7 @@ export default function FilmesPage() {
             title="Crie sua primeira lista para começar."
             description='Ex.: "Filmes com os amigos" ou "Filmes com a namorada" — cada lista tem seus próprios filmes.'
             action={
-              <Button className="px-4" onClick={openCreateList}>
+              <Button data-tutorial="create-list-button" className="px-4" onClick={openCreateList}>
                 Criar lista
               </Button>
             }
@@ -661,6 +713,7 @@ export default function FilmesPage() {
             onDelete={handleDeleteMovie}
             onCopyToList={handleCopyToList}
             onToggleWatched={handleToggleWatched}
+            onCardContextMenuOpen={() => tutorial.notify("context-menu-opened")}
           />
         )}
       </main>
@@ -679,6 +732,7 @@ export default function FilmesPage() {
           <div className="flex flex-col gap-1">
             <SpeedDialAction
               label="Adicionar filme"
+              dataTutorial="speed-dial-add-movie"
               icon={
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
                   <rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -692,6 +746,7 @@ export default function FilmesPage() {
             />
             <SpeedDialAction
               label="Selecionar filmes"
+              dataTutorial="speed-dial-select-action"
               icon={
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
                   <rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -734,6 +789,7 @@ export default function FilmesPage() {
         movie={editingMovie ?? undefined}
         otherLists={otherLists}
         existingMovies={activeMovies}
+        tutorialHint={tutorial.hintFor("movie-form-search")}
       />
 
       <MovieViewDialog
@@ -765,6 +821,9 @@ export default function FilmesPage() {
         settings={settings}
         onUpdateSettings={updateSettings}
         lists={lists}
+        tutorialProgress={tutorial.progress}
+        onStartTutorialPart={tutorial.startPart}
+        onStartTutorialFull={tutorial.startFull}
       />
 
       <EditProfileDialog
@@ -779,9 +838,15 @@ export default function FilmesPage() {
 
       <RouletteDialog
         open={isRouletteOpen}
-        onClose={() => setIsRouletteOpen(false)}
+        onClose={() => {
+          tutorial.notify("roulette-closed");
+          setIsRouletteOpen(false);
+        }}
         movies={activeMovies}
         initialPoolIds={rouletteInitialIds}
+        onSpinStart={() => tutorial.notify("roulette-spinning")}
+        tutorialSetupHint={tutorial.hintFor("roulette-setup")}
+        tutorialResultHint={tutorial.hintFor("roulette-result")}
       />
 
       <DuplicateMovieDialog
@@ -798,6 +863,7 @@ export default function FilmesPage() {
         onClose={closeListForm}
         onSave={handleSaveList}
         list={editingList ?? undefined}
+        tutorialHint={tutorial.hintFor("list-form")}
       />
 
       <ListsDrawer

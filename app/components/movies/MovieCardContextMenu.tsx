@@ -142,6 +142,7 @@ export function MovieCardContextMenu({
               onToggleWatched();
               onClose();
             }}
+            data-tutorial="context-menu-toggle-watched"
             className="flex items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-mist-100 hover:bg-ink-800"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 shrink-0">

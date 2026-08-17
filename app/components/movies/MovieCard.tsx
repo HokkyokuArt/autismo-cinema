@@ -30,6 +30,10 @@ interface MovieCardProps {
   onDelete: (movie: Movie) => void;
   onCopyToList: (movie: Movie, targetListId: string) => void;
   onToggleWatched: (movie: Movie) => void;
+  /** Marca este card como o alvo do tutorial guiado (`data-tutorial="movie-card-first"`). */
+  isTutorialTarget?: boolean;
+  /** Chamado ao abrir o menu de contexto (long-press/clique direito) — usado pelo tutorial. */
+  onContextMenuOpen?: () => void;
 }
 
 export function MovieCard({
@@ -45,6 +49,8 @@ export function MovieCard({
   onDelete,
   onCopyToList,
   onToggleWatched,
+  isTutorialTarget,
+  onContextMenuOpen,
 }: MovieCardProps) {
   const { info, watched } = movie;
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -139,12 +145,14 @@ export function MovieCard({
     const x = Math.max(8, Math.min(event.clientX, window.innerWidth - MENU_WIDTH - 8));
     const y = Math.max(8, Math.min(event.clientY, window.innerHeight - MENU_HEIGHT_ESTIMATE - 8));
     setMenuPosition({ x, y });
+    onContextMenuOpen?.();
   }
 
   return (
     <div
       ref={cardRef}
       data-tilt-card={isTiltEnabled ? "true" : undefined}
+      data-tutorial={isTutorialTarget ? "movie-card-first" : undefined}
       className={
         "group relative cursor-pointer overflow-hidden rounded-lg transition-shadow " +
         (selected ? "ring-2 ring-brand-500 " : "") +

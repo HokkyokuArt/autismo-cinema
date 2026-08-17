@@ -19,6 +19,7 @@ export function TopBar({ user, listName, onLogout, onOpenLists, onOpenSettings, 
           type="button"
           onClick={onOpenLists}
           aria-label="Abrir minhas listas"
+          data-tutorial="open-lists-button"
           className="shrink-0 rounded-full p-2 text-mist-300 hover:bg-ink-700 hover:text-mist-50"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
@@ -57,6 +58,7 @@ export function TopBar({ user, listName, onLogout, onOpenLists, onOpenSettings, 
           onClick={onOpenSettings}
           title="Configurações"
           aria-label="Abrir configurações"
+          data-tutorial="settings-gear-button"
           className="rounded-full p-2 text-mist-300 hover:bg-ink-700 hover:text-mist-50"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">

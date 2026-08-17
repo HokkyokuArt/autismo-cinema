@@ -25,7 +25,7 @@ export function MovieFilterBar({
   onOpenSort,
 }: MovieFilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 pt-4 sm:px-6">
+    <div data-tutorial="filter-bar" className="flex flex-wrap items-center gap-2 px-4 pt-4 sm:px-6">
       <div className="relative min-w-0 flex-1 sm:max-w-xs">
         <svg
           viewBox="0 0 24 24"

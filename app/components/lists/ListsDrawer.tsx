@@ -120,6 +120,7 @@ export function ListsDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="Minhas listas"
+        data-tutorial="lists-drawer-panel"
         className={
           "fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85vw] flex-col border-r border-ink-700 bg-ink-900 transition-transform duration-300 ease-out " +
           (open ? "translate-x-0" : "-translate-x-full")
@@ -259,7 +260,7 @@ export function ListsDrawer({
         </div>
 
         <div className="border-t border-ink-700 p-3">
-          <Button className="w-full" onClick={onCreateList}>
+          <Button data-tutorial="create-list-button" className="w-full" onClick={onCreateList}>
             Nova lista
           </Button>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Movie } from "~/models/movie";
 import { EMPTY_ADVANCED_FILTERS, type AdvancedMovieFilters } from "~/models/movieFilters";
 import { useToast } from "~/contexts/ToastContext";
@@ -9,6 +9,7 @@ import { MovieDetails } from "~/components/movies/MovieDetails";
 import { RouletteWheel } from "~/components/roulette/RouletteWheel";
 import { Fireworks } from "~/components/roulette/Fireworks";
 import { AdvancedFiltersDialog } from "~/dialogs/AdvancedFiltersDialog";
+import { TutorialHintBanner } from "~/components/tutorial/TutorialHintBanner";
 import { computeFilterBounds, matchesAdvancedFilters } from "~/utils/movieFilters";
 
 interface RouletteDialogProps {
@@ -17,6 +18,11 @@ interface RouletteDialogProps {
   movies: Movie[];
   /** Se vier preenchido (ex.: seleção manual na grade), esses filmes viram o pool inicial no lugar do padrão. */
   initialPoolIds?: string[];
+  /** Chamado no instante em que o giro começa (antes da animação) — usado pelo tutorial guiado. */
+  onSpinStart?: () => void;
+  /** Avisos do tutorial guiado, exibidos na etapa de configuração e na de resultado. */
+  tutorialSetupHint?: ReactNode;
+  tutorialResultHint?: ReactNode;
 }
 
 type Step = "setup" | "wheel" | "celebrating" | "result";
@@ -47,7 +53,15 @@ function shouldShowFireworks(): boolean {
  * vencedor antes do giro, gira com física via `RouletteWheel` e mostra o
  * resultado com "Rodar novamente"/"Fechar". Nunca marca como assistido.
  */
-export function RouletteDialog({ open, onClose, movies, initialPoolIds }: RouletteDialogProps) {
+export function RouletteDialog({
+  open,
+  onClose,
+  movies,
+  initialPoolIds,
+  onSpinStart,
+  tutorialSetupHint,
+  tutorialResultHint,
+}: RouletteDialogProps) {
   const { showToast } = useToast();
   const [step, setStep] = useState<Step>("setup");
   const [poolIds, setPoolIds] = useState<string[]>([]);
@@ -125,6 +139,7 @@ export function RouletteDialog({ open, onClose, movies, initialPoolIds }: Roulet
 
   function pickWinnerAndSpin() {
     if (pool.length < 2) return;
+    onSpinStart?.();
     const winner = pool[Math.floor(Math.random() * pool.length)];
     setWinnerId(winner.id);
     setStep("wheel");
@@ -137,6 +152,7 @@ export function RouletteDialog({ open, onClose, movies, initialPoolIds }: Roulet
       <Dialog open={open} onClose={onClose} title={STEP_TITLES[step]} size="full">
         {step === "setup" && (
           <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+            {tutorialSetupHint && <TutorialHintBanner>{tutorialSetupHint}</TutorialHintBanner>}
             <p className="text-sm text-mist-400">
               Por padrão a roleta sorteia entre os filmes ainda não assistidos. Filtre pra restringir, ou adicione
               filmes específicos manualmente — a inclusão manual funciona independente dos filtros.
@@ -247,6 +263,7 @@ export function RouletteDialog({ open, onClose, movies, initialPoolIds }: Roulet
 
         {step === "result" && winnerMovie && (
           <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6">
+            {tutorialResultHint && <TutorialHintBanner>{tutorialResultHint}</TutorialHintBanner>}
             <div className="min-h-0 flex-1 overflow-y-auto">
               <MovieDetails info={winnerMovie.info} />
             </div>

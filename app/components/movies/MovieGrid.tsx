@@ -23,6 +23,8 @@ interface MovieGridProps {
   onDelete: (movie: Movie) => void;
   onCopyToList: (movie: Movie, targetListId: string) => void;
   onToggleWatched: (movie: Movie) => void;
+  /** Chamado quando qualquer card abre seu menu de contexto — usado pelo tutorial guiado. */
+  onCardContextMenuOpen?: () => void;
 }
 
 export function MovieGrid({
@@ -39,10 +41,11 @@ export function MovieGrid({
   onDelete,
   onCopyToList,
   onToggleWatched,
+  onCardContextMenuOpen,
 }: MovieGridProps) {
   return (
     <div className={`grid gap-4 p-4 sm:p-6 ${GRID_CLASSES[size]}`}>
-      {movies.map((movie) => (
+      {movies.map((movie, index) => (
         <MovieCard
           key={movie.id}
           movie={movie}
@@ -57,6 +60,8 @@ export function MovieGrid({
           onDelete={onDelete}
           onCopyToList={onCopyToList}
           onToggleWatched={onToggleWatched}
+          isTutorialTarget={index === 0}
+          onContextMenuOpen={onCardContextMenuOpen}
         />
       ))}
     </div>

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { AppSettings } from "~/models/settings";
 import type { MovieList } from "~/models/movieList";
+import type { TutorialPartId, TutorialProgress } from "~/models/tutorial";
+import { TUTORIAL_PARTS } from "~/models/tutorial";
 import { Dialog } from "~/components/common/Dialog";
 import { Button } from "~/components/common/Button";
 import { TextareaField } from "~/components/common/TextareaField";
@@ -24,17 +26,30 @@ interface SettingsDialogProps {
   settings: AppSettings;
   onUpdateSettings: (partial: Partial<AppSettings>) => void;
   lists: MovieList[];
+  tutorialProgress: TutorialProgress;
+  onStartTutorialPart: (partId: TutorialPartId) => void;
+  onStartTutorialFull: () => void;
 }
 
-type SettingsTab = "layout" | "backup" | "sobre";
+type SettingsTab = "layout" | "backup" | "tutoriais" | "sobre";
 
 const TABS: { value: SettingsTab; label: string }[] = [
   { value: "layout", label: "Layout" },
   { value: "backup", label: "Backup" },
+  { value: "tutoriais", label: "Tutoriais" },
   { value: "sobre", label: "Sobre" },
 ];
 
-export function SettingsDialog({ open, onClose, settings, onUpdateSettings, lists }: SettingsDialogProps) {
+export function SettingsDialog({
+  open,
+  onClose,
+  settings,
+  onUpdateSettings,
+  lists,
+  tutorialProgress,
+  onStartTutorialPart,
+  onStartTutorialFull,
+}: SettingsDialogProps) {
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<SettingsTab>("layout");
@@ -293,6 +308,60 @@ export function SettingsDialog({ open, onClose, settings, onUpdateSettings, list
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {activeTab === "tutoriais" && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-mist-400">
+                Refaça o tour completo do início ou só a parte que quiser relembrar.
+              </p>
+              <Button
+                variant="ghost"
+                className="shrink-0 px-3 py-1.5 text-xs"
+                onClick={() => {
+                  onClose();
+                  onStartTutorialFull();
+                }}
+              >
+                Refazer tudo
+              </Button>
+            </div>
+
+            <ul className="flex flex-col gap-2">
+              {TUTORIAL_PARTS.map((part) => {
+                const isDone = tutorialProgress.completedParts.includes(part.id);
+                return (
+                  <li
+                    key={part.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-ink-700 p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-sm font-medium text-mist-50">
+                        {part.label}
+                        {isDone && (
+                          <span className="text-xs font-normal text-emerald-400" aria-label="Concluído">
+                            ✓
+                          </span>
+                        )}
+                      </p>
+                      <p className="truncate text-xs text-mist-400">{part.description}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      className="shrink-0 px-3 py-1.5 text-xs"
+                      onClick={() => {
+                        onClose();
+                        onStartTutorialPart(part.id);
+                      }}
+                    >
+                      Refazer
+                    </Button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         )}
 

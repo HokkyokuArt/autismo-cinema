@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import type { Movie, MovieInfo, MovieSource } from "~/models/movie";
 import type { MovieList } from "~/models/movieList";
 import { movieProvider, MovieProviderError, type MovieSearchResult } from "~/api/movieProvider";
@@ -14,6 +14,7 @@ import { Button } from "~/components/common/Button";
 import { FormField } from "~/components/common/FormField";
 import { TextareaField } from "~/components/common/TextareaField";
 import { PosterImage } from "~/components/movies/PosterImage";
+import { TutorialHintBanner } from "~/components/tutorial/TutorialHintBanner";
 
 const SEARCH_DEBOUNCE_MS = 400;
 
@@ -32,6 +33,8 @@ interface MovieFormDialogProps {
   otherLists: MovieList[];
   /** Filmes já na lista atual — usado pra ocultar/marcar resultados de busca já adicionados. */
   existingMovies: Movie[];
+  /** Aviso do tutorial guiado, exibido enquanto a busca estiver em foco. */
+  tutorialHint?: ReactNode;
 }
 
 export function MovieFormDialog({
@@ -42,6 +45,7 @@ export function MovieFormDialog({
   movie,
   otherLists,
   existingMovies,
+  tutorialHint,
 }: MovieFormDialogProps) {
   const isEditing = movie != null;
   const [step, setStep] = useState<Step>("search");
@@ -257,6 +261,7 @@ export function MovieFormDialog({
     >
       {step === "search" && (
         <div className="flex flex-col gap-4">
+          {tutorialHint && <TutorialHintBanner>{tutorialHint}</TutorialHintBanner>}
           <FormField
             label="Buscar filme"
             placeholder="Ex.: Interestelar"

@@ -3,6 +3,8 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "ghost";
   isLoading?: boolean;
+  /** Selector usado pelo tutorial guiado (`useTutorialFlow`) pra destacar este botão. */
+  "data-tutorial"?: string;
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(

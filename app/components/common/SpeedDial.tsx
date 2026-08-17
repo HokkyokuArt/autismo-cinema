@@ -127,6 +127,7 @@ export function SpeedDial({ open, onOpenChange, onMainAction, mainIcon, mainLabe
         onContextMenu={(event) => event.preventDefault()}
         aria-label={mainLabel}
         title={mainLabel}
+        data-tutorial="speed-dial-main"
         className="flex h-14 w-14 touch-none items-center justify-center overflow-hidden rounded-full bg-brand-600 text-white shadow-2xl transition-transform select-none hover:scale-105"
       >
         <span className="h-9 w-9">{mainIcon}</span>
@@ -139,13 +140,15 @@ interface SpeedDialActionProps {
   label: string;
   icon: ReactNode;
   onClick: () => void;
+  dataTutorial?: string;
 }
 
-export function SpeedDialAction({ label, icon, onClick }: SpeedDialActionProps) {
+export function SpeedDialAction({ label, icon, onClick, dataTutorial }: SpeedDialActionProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      data-tutorial={dataTutorial}
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-mist-100 hover:bg-ink-800"
     >
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-800 text-mist-200">
